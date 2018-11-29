@@ -10,27 +10,23 @@ namespace SecretSanta
 {
     public class Notifier
     {
-        private readonly IConfigurationRoot _config;
+        private const string FromName = "Secret Santa";
         
         private readonly SmtpClient _client;
 
-        private readonly string _fromName;
-
         private readonly string _fromEmail;
 
-        public Notifier()
+        private readonly string _messagePath;
+
+        public Notifier(SantaArgs args)
         {
-            _config = new ConfigurationBuilder()
-               .AddJsonFile("appsettings.json", false)
-               .Build();
+            var server = args.SmtpServerWithoutPort;
+            var port = args.SmtpPort;
+            var username = args.SmtpUsername;
+            var password = args.SmtpPassword;
 
-            var server = _config["Smtp:Server"];
-            var port = Convert.ToInt32(_config["Smtp:Port"]);
-            var username = _config["Smtp:Username"];
-            var password = _config["Smtp:Password"];
-
-            _fromName = _config["Smtp:FromName"];
-            _fromEmail = _config["Smtp:FromEmail"];
+            _fromEmail = args.FromAddress;
+            _messagePath = args.MessagePath;
 
             _client = new SmtpClient(server, port)
             {
@@ -41,13 +37,13 @@ namespace SecretSanta
         public async Task SendMessageToSanta(Participant santa, Participant recipient)
         {
             var message = new MailMessage(
-                new MailAddress(_fromEmail, _fromName),
+                new MailAddress(_fromEmail, FromName),
                 new MailAddress(santa.Email, santa.Name)
             );
 
             message.Subject = "Your a secret santa to...";
             message.IsBodyHtml = true;
-            message.Body = File.ReadAllText(_config["MessagePath"])
+            message.Body = File.ReadAllText(_messagePath)
                 .Replace("{{name}}", recipient.Name);
             
             await _client.SendMailAsync(message);
