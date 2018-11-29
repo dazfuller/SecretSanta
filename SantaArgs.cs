@@ -10,6 +10,7 @@ using PowerArgs;
 namespace SecretSanta
 {
     [ArgExceptionBehavior(ArgExceptionPolicy.StandardExceptionHandling)]
+    [ArgDescription("Pick your secret santas without needing everyone in the office")]
     public class SantaArgs
     {
         private const int DefaultPort = 465;
