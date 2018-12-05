@@ -21,7 +21,7 @@ C:\> dotnet tool install -g SecretSanta
 The command line application is executed as follows, note that the help information can be displayed at any time using the command is illustrated below.
 
 ```cmd
-C:\> SecretSant -h
+C:\> SecretSanta -h
 
 Usage - SecretSanta -options
 
