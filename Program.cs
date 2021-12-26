@@ -10,7 +10,7 @@ namespace SecretSanta
         {
             try
             {
-                var parsed = await Args.InvokeMainAsync<SantaArgs>(args);
+                await Args.InvokeMainAsync<SantaArgs>(args);
             }
             catch (ArgException ex)
             {

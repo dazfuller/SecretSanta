@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using CsvHelper;
+using CsvHelper.Configuration;
 using PowerArgs;
 
 namespace SecretSanta
 {
     [ArgExceptionBehavior(ArgExceptionPolicy.StandardExceptionHandling)]
-    [ArgDescription("Pick your secret santas without needing everyone in the office")]
+    [ArgDescription("Pick your secret santa without needing everyone in the office")]
     public class SantaArgs
     {
         private const int DefaultPort = 465;
@@ -20,8 +22,9 @@ namespace SecretSanta
         public bool Help { get; set; }
 
         [ArgRequired(IfNot = "Help"), ArgShortcut("-s")]
-        [ArgDescription("The address of the SMTP server with optional port (e.g. smtp.mailtrap.io:465), default port is 465")]
-        public string SmtpServer { get; set; }
+        [ArgDescription(
+            "The address of the SMTP server with optional port (e.g. smtp.mailtrap.io:465), default port is 465")]
+        public string SmtpServer { get; set; } = string.Empty;
 
         [ArgIgnore]
         public string SmtpServerWithoutPort
@@ -56,25 +59,25 @@ namespace SecretSanta
 
         [ArgRequired(IfNot = "Help"), ArgShortcut("-u")]
         [ArgDescription("User for the SMTP server")]
-        public string SmtpUsername { get; set; }
+        public string SmtpUsername { get; set; } = string.Empty;
 
         [ArgRequired(IfNot = "Help"), ArgShortcut("-p")]
         [ArgDescription("Password for the SMTP server")]
-        public string SmtpPassword { get; set; }
+        public string SmtpPassword { get; set; } = string.Empty;
 
         [ArgRequired(IfNot = "Help"), ArgShortcut("-f")]
         [ArgDescription("The email address of the sender")]
-        public string FromAddress { get; set; }
+        public string FromAddress { get; set; } = string.Empty;
 
         [ArgRequired(IfNot = "Help"), ArgShortcut("-i")]
         [ArgDescription("Path to the input CSV file containing participants and their email addresses")]
         [ArgExistingFile]
-        public string InputPath { get; set; }
+        public string InputPath { get; set; } = string.Empty;
 
         [ArgRequired(IfNot = "Help"), ArgShortcut("-m")]
         [ArgDescription("Path to the message HTML file")]
         [ArgExistingFile]
-        public string MessagePath { get; set; }
+        public string MessagePath { get; set; } = string.Empty;
 
         public async Task Main()
         {
@@ -90,16 +93,14 @@ namespace SecretSanta
             Console.WriteLine("Making list...");
             var selection = PickFromHat();
 
-            Console.WriteLine("Checking list...");
-            Console.WriteLine("Checking List...");
-
             try
             {
                 var notifier = new Notifier(this);
                 Console.WriteLine("Sending list to elves...");
-                foreach (var pair in selection)
+                
+                foreach (var (santa, recipient) in selection)
                 {
-                    await notifier.SendMessageToSanta(pair.Key, pair.Value);
+                    await notifier.SendMessageToSanta(santa, recipient);
                 }
             }
             catch (SmtpException ex)
@@ -109,28 +110,25 @@ namespace SecretSanta
                 {
                     Console.WriteLine(ex.InnerException.Message);
                 }
-                return;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"An error has occured: {ex.Message}");
-                return;
             }
         }
 
         private Dictionary<Participant, Participant> PickFromHat()
         {
-            using (var reader = new StreamReader(File.OpenRead(InputPath)))
+            var configuration = new CsvConfiguration(CultureInfo.CurrentCulture)
             {
-                using (var csv = new CsvReader(reader))
-                {
-                    csv.Configuration.HasHeaderRecord = true;
-                    var records = csv.GetRecords<Participant>().ToList();
-                    
-                    var picker = new RandomPicker();
-                    return picker.GenerateParticipants(records);
-                }
-            }
+                HasHeaderRecord = true,
+            };
+            using var csv = new CsvReader(File.OpenText(InputPath), configuration);
+
+            var records = csv.GetRecords<Participant>().ToList();
+
+            var picker = new RandomPicker();
+            return picker.GenerateParticipants(records);
         }
     }
 }

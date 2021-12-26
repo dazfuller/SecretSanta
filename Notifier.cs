@@ -1,17 +1,14 @@
-using System;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Json;
 
 namespace SecretSanta
 {
     public class Notifier
     {
         private const string FromName = "Secret Santa";
-        
+
         private readonly SmtpClient _client;
 
         private readonly string _fromEmail;
@@ -43,9 +40,9 @@ namespace SecretSanta
 
             message.Subject = "Your a secret santa to...";
             message.IsBodyHtml = true;
-            message.Body = File.ReadAllText(_messagePath)
+            message.Body = (await File.ReadAllTextAsync(_messagePath))
                 .Replace("{{name}}", recipient.Name);
-            
+
             await _client.SendMailAsync(message);
         }
     }

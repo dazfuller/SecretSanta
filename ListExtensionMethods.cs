@@ -3,15 +3,12 @@ using System.Collections.Generic;
 
 namespace SecretSanta
 {
-    public static class IListExtensionMethods
+    public static class ListExtensionMethods
     {
-        public static void Swap<T>(this IList<T> list, int a, int b)
+        private static void Swap<T>(this IList<T> list, int a, int b)
         {
             if (a == b) return;
-            
-            var temp = list[a];
-            list[a] = list[b];
-            list[b] = temp;
+            (list[a], list[b]) = (list[b], list[a]);
         }
 
         public static void Shuffle<T>(this IList<T> list, Random random)

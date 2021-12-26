@@ -6,29 +6,31 @@ namespace SecretSanta
 {
     public class RandomPicker
     {
-        private Random _random;
+        private readonly Random _random;
 
         public RandomPicker()
         {
             _random = new Random();
         }
 
-        public Dictionary<Participant, Participant> GenerateParticipants(IEnumerable<Participant> participants)
+        public Dictionary<Participant, Participant> GenerateParticipants(IList<Participant> participants)
         {
-            var isValid = true;
-            var finalRecipients = new Dictionary<Participant, Participant>();
+            bool isValid;
+            Dictionary<Participant, Participant> finalRecipients;
 
             do
             {
+                Console.WriteLine("Checking list...");
+                
                 isValid = true;
-                var presentReceipients = new List<Participant>();
+                var presentRecipients = new List<Participant>();
                 finalRecipients = new Dictionary<Participant, Participant>();
 
                 foreach (var person in participants)
                 {
                     var hat = participants
                         .Where(p => p.Name != person.Name)
-                        .Where(p => !presentReceipients.Contains(p))
+                        .Where(p => !presentRecipients.Contains(p))
                         .ToList();
 
                     if (!hat.Any())
@@ -41,7 +43,7 @@ namespace SecretSanta
 
                     var recipient = hat.First();
 
-                    presentReceipients.Add(recipient);
+                    presentRecipients.Add(recipient);
                     finalRecipients.Add(person, recipient);
                 }
             } while (!isValid);
